@@ -12,6 +12,7 @@
   "dependencies": {
     "@bull-board/api": "^6.9.6",
     "@bull-board/express": "^6.9.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.9.0",
     "bullmq": "^5.1.1",

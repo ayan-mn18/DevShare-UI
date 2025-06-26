@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, RefreshCw } from 'lucide-react';
-import Button from '../components/common/Button';
+import { CreditCard, LogOut, RefreshCw } from 'lucide-react';
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import IntegrationCards from '../components/dashboard/IntegrationCards';
 import ContributionMetrics from '../components/dashboard/ContributionMetrics';
 import ScheduledTweets from '../components/dashboard/ScheduledTweets';
 import TestTweetButton from '../components/dashboard/TestTweetButton';
 import ProgressStepper from '../components/onboarding/ProgressStepper';
 import { set } from 'date-fns';
+
 
 
 // Define types for the dashboard data
@@ -22,6 +23,7 @@ interface DashboardData {
     leetcode_username: string | null;
     test_tweet_used: boolean;
     created_at: string;
+    avatar: string;
   };
   githubMetrics: {
     contributions: Array<{ date: string; count: number }>;
@@ -54,6 +56,18 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
   const [dataLoading, setDataLoading] = useState<boolean>(true);
   const [dataFetched, setDataFetched] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [showIntegrations, setShowIntegrations] = useState<boolean>(() => {
+    const stored = localStorage.getItem('show_integrations');
+    return stored === null ? true : stored === 'true';
+  });
+  const [showProgressStepper, setShowProgressStepper] = useState<boolean>(() => {
+    const stored = localStorage.getItem('show_progress_stepper');
+    return stored === null ? true : stored === 'true';
+  });
+  const [showTestTweetButton, setShowTestTweetButton] = useState<boolean>(() => {
+    const stored = localStorage.getItem('show_test_tweet_button');
+    return stored === null ? true : stored === 'true';
+  });
 
 
 
@@ -199,37 +213,76 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
     <div className="min-h-screen">
       <header className="bg-[#192734] border-b border-[#38444D] py-4 sticky top-0 z-10">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="bg-[#1DA1F2] rounded-full p-2 mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <path d="M8 3v3a2 2 0 0 1-2 2H3"></path>
-                <path d="M21 8h-3a2 2 0 0 1-2-2V3"></path>
-                <path d="M3 16h3a2 2 0 0 1 2 2v3"></path>
-                <path d="M16 21v-3a2 2 0 0 1 2-2h3"></path>
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-white">DevShare</h1>
+          <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+            <img src="/icon.ico" alt="DevShare Logo" className="h-10 w-10" />
+            <h1 className="text-2xl font-bold text-white">DevShare</h1>
           </div>
 
+          {/* Dropdown menu */}
           <div className="flex items-center space-x-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />}
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              title="Refresh dashboard data"
-            >
-              {isRefreshing ? "Refreshing..." : "Refresh"}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<LogOut size={16} />}
-              onClick={logout}
-            >
-              Logout
-            </Button>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <img
+                  src={dashboardData?.user?.avatar}
+                  alt={dashboardData?.user?.name || "Dev Share"}
+                  className="h-9 w-9 rounded-full border-2 border-[#2881cf] ml-2 shadow cursor-pointer"
+                />
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content
+                sideOffset={8}
+                className="bg-[#22303C] border border-[#38444D] rounded-md shadow-lg p-2 min-w-[140px] z-50"
+              >
+                <DropdownMenu.Item
+                  onSelect={handleRefresh}
+                  className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw size={16} className={isRefreshing ? "animate-spin mr-2" : "mr-2"} />
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="h-px bg-[#38444D] my-1" />
+                <DropdownMenu.Item
+                  onSelect={logout}
+                  className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                >
+                  <LogOut size={16} className="mr-2" />
+                  Logout
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="h-px bg-[#38444D] my-1" />
+                <DropdownMenu.Sub>
+                  <DropdownMenu.SubTrigger
+                    className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                  >
+                    <CreditCard size={16} className="mr-2" />
+                    Show Cards
+                  </DropdownMenu.SubTrigger>
+                  <DropdownMenu.SubContent
+                    className="bg-[#22303C] border border-[#38444D] rounded-md shadow-lg p-2 min-w-[160px] z-50"
+                    sideOffset={8}
+                    alignOffset={-5}
+                  >
+                    <DropdownMenu.Item
+                      onSelect={() => { setShowIntegrations(true); localStorage.setItem('show_integrations', 'true'); }}
+                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                    >
+                      Social Cards
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={() => { setShowTestTweetButton(true); localStorage.setItem('show_test_tweet_button', 'true'); }}
+                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                    >
+                      Test Tweet
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={() => { setShowProgressStepper(true); localStorage.setItem('show_progress_stepper', 'true'); }}
+                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                    >
+                      Progress Card
+                    </DropdownMenu.Item>
+                  </DropdownMenu.SubContent>
+                </DropdownMenu.Sub>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
           </div>
         </div>
       </header>
@@ -246,7 +299,16 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <IntegrationCards fetchDashboardData={fetchDashboardData} />
+            {showIntegrations && (
+              <IntegrationCards
+                fetchDashboardData={fetchDashboardData}
+                onHide={() => {
+                  setShowIntegrations(false);
+                  localStorage.setItem('show_integrations', 'false');
+                }}
+              />
+            )}
+            {/* <IntegrationCards fetchDashboardData={fetchDashboardData} disable={showIntegrations} /> */}
 
             {allConnected && (
               <>
@@ -262,12 +324,23 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
           </div>
 
           <div className="space-y-6">
-            <ProgressStepper />
-            <TestTweetButton
-              isDisabled={!allConnected || user.testTweetUsed}
-              userId={dashboardData?.user.id || ''}
-              twitterUsername={dashboardData?.user.twitter_username || undefined}
-            />
+            {showProgressStepper && (
+              <ProgressStepper onHide={() => {
+                setShowProgressStepper(false)
+                localStorage.setItem('show_progress_stepper', 'false');
+              }} />
+            )}
+            {showTestTweetButton && (
+              <TestTweetButton
+                isDisabled={!allConnected || user.testTweetUsed}
+                userId={dashboardData?.user.id || ''}
+                twitterUsername={dashboardData?.user.twitter_username || undefined}
+                onHide={() => {
+                  setShowTestTweetButton(false);
+                  localStorage.setItem('show_test_tweet_button', 'false');
+                }}
+              />
+            )}
           </div>
         </div>
       </main>
