@@ -8,6 +8,9 @@ interface ProgressStepperProps {
 }
 
 const ProgressStepper: React.FC<ProgressStepperProps> = ({ disabled, onHide }) => {
+  if (disabled) {
+    return null; // If disabled, don't render the stepper
+  }
   const { user } = useAuth();
 
   const steps = [

@@ -18,20 +18,21 @@ const HeroSection: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-b from-[#15202B] to-[#0D1318]">
+
       <div className="max-w-3xl mx-auto text-center">
         <div className="animate-fadeIn opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Showcase Your Code Journey 
+            Showcase Your Code Journey
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#1DA1F2] to-[#5DA9E6]"> Automatically</span>
           </h1>
         </div>
-        
+
         <div className="animate-fadeIn opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
           <p className="text-xl text-[#8899A6] mb-8 max-w-2xl mx-auto">
             Connect your X (Twitter), GitHub, and LeetCode accounts to automatically share your coding achievements with the world.
           </p>
         </div>
-        
+
         <div className="animate-fadeUp opacity-0" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
@@ -42,19 +43,19 @@ const HeroSection: React.FC = () => {
             >
               {user ? 'Go to Dashboard' : 'Connect with X'}
             </Button>
-            
+
             <Button
               variant="outline"
               size="lg"
               className="px-8 py-4 text-lg group"
-              onClick={() => window.open('https://github.com/features', '_blank')}
+              onClick={() => navigate('/')}
             >
               Learn More
               <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </div>
-        
+
         <div className="mt-12 animate-fadeUp opacity-0" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="bg-[#192734] p-6 rounded-xl border border-[#38444D]">
@@ -64,7 +65,7 @@ const HeroSection: React.FC = () => {
               <h3 className="text-white font-semibold mb-2">Connect</h3>
               <p className="text-[#8899A6]">Link your X, GitHub, and LeetCode accounts in just a few clicks.</p>
             </div>
-            
+
             <div className="bg-[#192734] p-6 rounded-xl border border-[#38444D]">
               <div className="bg-[#FFAD1F]/10 w-12 h-12 flex items-center justify-center rounded-full mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FFAD1F]">
@@ -81,7 +82,7 @@ const HeroSection: React.FC = () => {
               <h3 className="text-white font-semibold mb-2">Automate</h3>
               <p className="text-[#8899A6]">Set schedules for your coding accomplishment tweets.</p>
             </div>
-            
+
             <div className="bg-[#192734] p-6 rounded-xl border border-[#38444D]">
               <div className="bg-[#17BF63]/10 w-12 h-12 flex items-center justify-center rounded-full mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#17BF63]">

@@ -4,7 +4,7 @@ import Button from '../common/Button';
 import OAuthButton from '../auth/OAuthButton';
 import Input from '../common/Input';
 import Toast from '../common/Toast';
-import { Twitter, Github, Book, CheckCircle, AlertCircle, CrossIcon, Cross, X } from 'lucide-react';
+import { Twitter, Github, Book, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 // fetchDashboardData, props for IntegrationCards

@@ -13,7 +13,10 @@ const LandingPage: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  return <HeroSection />;
+  return (
+
+    <HeroSection />
+  );
 };
 
 export default LandingPage;
