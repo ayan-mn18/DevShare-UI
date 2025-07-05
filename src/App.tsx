@@ -7,6 +7,7 @@ import ErrorPage from './pages/ErrorPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import EmailModal from './components/auth/EmailModal';
 import Toast from './components/common/Toast';
+import { Toaster } from 'react-hot-toast';
 
 function AppContent() {
   const { user, setUserEmail } = useAuth();
@@ -116,6 +117,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <Toaster position="bottom-right" />
     </AuthProvider>
   );
 }
