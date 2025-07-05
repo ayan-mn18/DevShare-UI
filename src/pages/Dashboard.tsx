@@ -42,6 +42,8 @@ interface DashboardData {
     level: string;
     contestRating: number;
   } | null;
+  time: string;
+  botId: string;
 }
 
 interface DashboardProps {
