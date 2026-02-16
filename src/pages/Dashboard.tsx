@@ -1,14 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CreditCard, LogOut, RefreshCw } from 'lucide-react';
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { LogOut, RefreshCw, CreditCard, LayoutDashboard } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 import IntegrationCards from '../components/dashboard/IntegrationCards';
 import ContributionMetrics from '../components/dashboard/ContributionMetrics';
 import ScheduledTweets from '../components/dashboard/ScheduledTweets';
 import TestTweetButton from '../components/dashboard/TestTweetButton';
 import ProgressStepper from '../components/onboarding/ProgressStepper';
-
+import ChallengesSection from '../components/dashboard/ChallengesSection';
+import ChallengeProgress from '../components/dashboard/ChallengeProgress';
 
 
 // Define types for the dashboard data
@@ -69,8 +82,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
     const stored = localStorage.getItem('show_test_tweet_button');
     return stored === null ? true : stored === 'true';
   });
-
-
+  const [showChallenges, setShowChallenges] = useState<boolean>(() => {
+    const stored = localStorage.getItem('show_challenges');
+    return stored === null ? true : stored === 'true';
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -79,7 +94,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    // Only run this effect once or when user changes
     if (loading) return;
 
     const fetchData = async () => {
@@ -93,10 +107,8 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
             updateUserContextFromData(parsedData);
           }
           setDataLoading(false);
-
         } catch (e) {
           console.error('Failed to parse stored dashboard data', e);
-          // Fallback to fetching from API if parsing fails
           if (user) {
             await fetchDashboardData();
           }
@@ -109,7 +121,6 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
     fetchData();
   }, [loading]);
 
-  // Update user context based on dashboard data
   const updateUserContextFromData = (data: DashboardData) => {
     if (!user) return;
 
@@ -138,46 +149,32 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
       try {
         const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/dashboard/${userId}`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
+        if (!response.ok) throw new Error('Failed to fetch dashboard data');
 
         const result = await response.json();
         if (result.status === 'SUCCESS' && result.data) {
-          // Store the data in localStorage
           localStorage.setItem('dashboard_data', JSON.stringify(result.data));
-
-          // Update state
           setDashboardData(result.data);
-
-          // Update user auth context with connectivity status
           updateUserContextFromData(result.data);
 
-          // Store specific values separately for easier access
           if (result.data.user.twitter_username) {
             localStorage.setItem('twitter_username', result.data.user.twitter_username);
             localStorage.setItem('twitter_authenticated', 'true');
           }
-
           if (result.data.user.github_username) {
             localStorage.setItem('github_username', result.data.user.github_username);
             localStorage.setItem('github_connected', 'true');
           }
-
           if (result.data.user.leetcode_username) {
             localStorage.setItem('leetcode_username', result.data.user.leetcode_username);
             localStorage.setItem('leetcode_connected', 'true');
           }
-
           if (result.data.user.email) {
             localStorage.setItem('user_email', result.data.user.email);
           }
-
           localStorage.setItem('test_tweet_used', result.data.user.test_tweet_used.toString());
         }
       } catch (error) {
@@ -189,114 +186,134 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
   };
 
   const handleRefresh = async () => {
-    // Clear cached data and force refresh
     setIsRefreshing(true);
     localStorage.removeItem('dashboard_data');
     localStorage.removeItem('tweets');
     await fetchDashboardData();
+    setIsRefreshing(false);
   };
 
   if (loading || dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#1DA1F2]"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-2 border-[#1DA1F2]/20 border-t-[#1DA1F2] animate-spin" />
+        </div>
+        <p className="text-sm text-white/30 font-medium animate-pulse">Loading your dashboard...</p>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const allConnected = user.twitterConnected && user.githubConnected && user.leetCodeConnected;
 
   return (
-    <div className="min-h-screen">
-      <header className="bg-[#192734] border-b border-[#38444D] py-4 sticky top-0 z-10">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/icon.ico" alt="DevShare Logo" className="h-10 w-10" />
-            <h1 className="text-2xl font-bold text-white">DevShare</h1>
+    <div className="min-h-screen bg-[#0D1117]">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(255,255,255,0.015)_1px,_transparent_0)] bg-[size:28px_28px]" />
+        <div className="absolute top-0 right-0 w-[500px] h-[300px] bg-[#1DA1F2]/[0.03] rounded-full blur-[120px]" />
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#0D1117]/80 backdrop-blur-xl">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#1DA1F2] blur-md opacity-0 rounded-full group-hover:opacity-40 transition-opacity duration-300" />
+              <img src="/icon.ico" alt="DevShare Logo" className="h-8 w-8 relative z-10 rounded-full ring-1 ring-white/10" />
+            </div>
+            <h1 className="text-lg font-display font-bold text-white tracking-tight">DevShare</h1>
           </div>
 
-          {/* Dropdown menu */}
-          <div className="flex items-center space-x-2">
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <img
-                  src={dashboardData?.user?.avatar}
-                  alt={dashboardData?.user?.name || "Dev Share"}
-                  className="h-9 w-9 rounded-full border-2 border-[#2881cf] ml-2 shadow cursor-pointer"
-                />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Content
-                sideOffset={8}
-                className="bg-[#22303C] border border-[#38444D] rounded-md shadow-lg p-2 min-w-[140px] z-50"
-              >
-                <DropdownMenu.Item
-                  onSelect={handleRefresh}
-                  className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="text-white/40 hover:text-white hover:bg-white/[0.06] h-9 w-9 rounded-xl"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="focus:outline-none focus:ring-2 focus:ring-[#1DA1F2]/40 rounded-full">
+                  <Avatar className="h-9 w-9 ring-2 ring-[#1DA1F2]/20 hover:ring-[#1DA1F2]/40 transition-all cursor-pointer">
+                    <AvatarImage src={dashboardData?.user?.avatar} alt={dashboardData?.user?.name || 'User'} />
+                    <AvatarFallback className="bg-[#1DA1F2]/10 text-[#1DA1F2] text-sm font-bold">
+                      {dashboardData?.user?.name?.charAt(0) || 'D'}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 bg-[#161B22] border-white/[0.08] text-white rounded-xl shadow-2xl shadow-black/50 p-1.5">
+                <DropdownMenuItem
+                  onClick={handleRefresh}
                   disabled={isRefreshing}
+                  className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer gap-2 py-2.5"
                 >
-                  <RefreshCw size={16} className={isRefreshing ? "animate-spin mr-2" : "mr-2"} />
-                  {isRefreshing ? "Refreshing..." : "Refresh"}
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator className="h-px bg-[#38444D] my-1" />
-                <DropdownMenu.Item
-                  onSelect={logout}
-                  className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
-                >
-                  <LogOut size={16} className="mr-2" />
-                  Logout
-                </DropdownMenu.Item>
-                <DropdownMenu.Separator className="h-px bg-[#38444D] my-1" />
-                <DropdownMenu.Sub>
-                  <DropdownMenu.SubTrigger
-                    className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
-                  >
-                    <CreditCard size={16} className="mr-2" />
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer gap-2 py-2.5">
+                    <CreditCard className="w-4 h-4" />
                     Show Cards
-                  </DropdownMenu.SubTrigger>
-                  <DropdownMenu.SubContent
-                    className="bg-[#22303C] border border-[#38444D] rounded-md shadow-lg p-2 min-w-[160px] z-50"
-                    sideOffset={8}
-                    alignOffset={-5}
-                  >
-                    <DropdownMenu.Item
-                      onSelect={() => { setShowIntegrations(true); localStorage.setItem('show_integrations', 'true'); }}
-                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="bg-[#161B22] border-white/[0.08] text-white rounded-xl shadow-2xl shadow-black/50 p-1.5">
+                    <DropdownMenuItem
+                      onClick={() => { setShowIntegrations(true); localStorage.setItem('show_integrations', 'true'); }}
+                      className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer py-2.5"
                     >
                       Social Cards
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      onSelect={() => { setShowTestTweetButton(true); localStorage.setItem('show_test_tweet_button', 'true'); }}
-                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => { setShowTestTweetButton(true); localStorage.setItem('show_test_tweet_button', 'true'); }}
+                      className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer py-2.5"
                     >
                       Test Tweet
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item
-                      onSelect={() => { setShowProgressStepper(true); localStorage.setItem('show_progress_stepper', 'true'); }}
-                      className="flex items-center px-2 py-2 rounded hover:bg-[#192734] text-white cursor-pointer"
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => { setShowProgressStepper(true); localStorage.setItem('show_progress_stepper', 'true'); }}
+                      className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer py-2.5"
                     >
                       Progress Card
-                    </DropdownMenu.Item>
-                  </DropdownMenu.SubContent>
-                </DropdownMenu.Sub>
-              </DropdownMenu.Content>
-            </DropdownMenu.Root>
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem
+                  onClick={() => { setShowChallenges(true); localStorage.setItem('show_challenges', 'true'); }}
+                  className="rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white cursor-pointer gap-2 py-2.5"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Challenges
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.06] my-1" />
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="rounded-lg text-[#E0245E]/80 hover:text-[#E0245E] hover:bg-[#E0245E]/[0.08] focus:bg-[#E0245E]/[0.08] focus:text-[#E0245E] cursor-pointer gap-2 py-2.5"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="relative z-10 container mx-auto px-4 py-8">
+        {/* Page Header */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Dashboard</h2>
-          <p className="text-[#8899A6]">
+          <h2 className="text-2xl font-display font-bold text-white tracking-tight">Dashboard</h2>
+          <p className="text-white/30 text-sm mt-1 font-medium">
             Manage your connected accounts and scheduled tweets.
           </p>
         </div>
-
-
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -309,10 +326,16 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
                 }}
               />
             )}
-            {/* <IntegrationCards fetchDashboardData={fetchDashboardData} disable={showIntegrations} /> */}
 
             {allConnected && (
               <>
+                {dashboardData?.user && (
+                  <ChallengeProgress
+                    userId={dashboardData.user.id}
+                    challengeId="ch_100_days_leetcode"
+                    challengeTitle="100 Days of LeetCode"
+                  />
+                )}
                 <ContributionMetrics
                   githubMetrics={dashboardData?.githubMetrics || null}
                   leetCodeMetrics={dashboardData?.leetCodeMetrics || null}
@@ -327,7 +350,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
           <div className="space-y-6">
             {showProgressStepper && (
               <ProgressStepper onHide={() => {
-                setShowProgressStepper(false)
+                setShowProgressStepper(false);
                 localStorage.setItem('show_progress_stepper', 'false');
               }} />
             )}
@@ -339,6 +362,15 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
                 onHide={() => {
                   setShowTestTweetButton(false);
                   localStorage.setItem('show_test_tweet_button', 'false');
+                }}
+              />
+            )}
+            {showChallenges && (
+              <ChallengesSection
+                userId={dashboardData?.user.id}
+                onHide={() => {
+                  setShowChallenges(false);
+                  localStorage.setItem('show_challenges', 'false');
                 }}
               />
             )}
