@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import Card from '../common/Card';
-import Button from '../common/Button';
-import OAuthButton from '../auth/OAuthButton';
-import Input from '../common/Input';
-import Toast from '../common/Toast';
 import { Twitter, Github, Book, CheckCircle, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import Toast from '../common/Toast';
 
-// fetchDashboardData, props for IntegrationCards
 interface IntegrationCardsProps {
   fetchDashboardData: () => void;
-  disable?: boolean; // Optional prop to disable the component
+  disable?: boolean;
   onHide?: () => void;
 }
 
@@ -28,42 +27,19 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
       setShowGithubInput(true);
       return;
     }
-
-    if (!githubUsername) {
-      return;
-    }
-
-    if (disable) {
-      return
-    }
+    if (!githubUsername || disable) return;
 
     setIsConnectingGithub(true);
-
     const response: any = connectGithub(githubUsername);
     if (response.success) {
       setIsConnectingGithub(false);
       setShowGithubInput(false);
-      // toast
-      return (
-        <Toast
-          message='Successfully connected to GitHub'
-          type="success"
-          onClose={() => { }}
-        />
-      );
+      return <Toast message='Successfully connected to GitHub' type="success" onClose={() => { }} />;
     } else {
       setIsConnectingGithub(false);
       setShowGithubInput(true);
-
       fetchDashboardData();
-
-      return (
-        <Toast
-          message='Error connecting to GitHub'
-          type="error"
-          onClose={() => { }}
-        />
-      );
+      return <Toast message='Error connecting to GitHub' type="error" onClose={() => { }} />;
     }
   };
 
@@ -72,181 +48,166 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
       setShowLeetCodeInput(true);
       return;
     }
-
-    if (!leetCodeUsername) {
-      return;
-    }
+    if (!leetCodeUsername) return;
 
     setIsConnectingLeetCode(true);
-
     const response: any = connectLeetCode(leetCodeUsername);
     if (response.success) {
       setIsConnectingLeetCode(false);
       setShowLeetCodeInput(false);
-      // toast
-      return (
-        <Toast
-          message='Successfully connected to LeetCode'
-          type="success"
-          onClose={() => { }}
-        />
-      );
+      return <Toast message='Successfully connected to LeetCode' type="success" onClose={() => { }} />;
     } else {
       setIsConnectingLeetCode(false);
       setShowLeetCodeInput(true);
-
-      fetchDashboardData()
-      // toast
-      return (
-        <Toast
-          message='Error connecting to LeetCode'
-          type="error"
-          onClose={() => { }}
-        />
-      );
+      fetchDashboardData();
+      return <Toast message='Error connecting to LeetCode' type="error" onClose={() => { }} />;
     }
   };
 
+  const integrations = [
+    {
+      id: 'twitter',
+      name: 'X (Twitter)',
+      icon: <Twitter className="w-5 h-5" />,
+      color: '#1DA1F2',
+      connected: user?.twitterConnected,
+      description: user?.twitterConnected
+        ? 'Your account is connected'
+        : 'Connect your Twitter account to schedule tweets',
+    },
+    {
+      id: 'github',
+      name: 'GitHub',
+      icon: <Github className="w-5 h-5" />,
+      color: '#6E5494',
+      connected: user?.githubConnected,
+      description: user?.githubConnected
+        ? 'Your account is connected'
+        : 'Connect GitHub to share your contributions',
+    },
+    {
+      id: 'leetcode',
+      name: 'LeetCode',
+      icon: <Book className="w-5 h-5" />,
+      color: '#FFAD1F',
+      connected: user?.leetCodeConnected,
+      description: user?.leetCodeConnected
+        ? 'Your account is connected'
+        : 'Link your LeetCode to share your streaks',
+    },
+  ];
+
   return (
     <div className="relative">
-      {/* Hide button */}
       {onHide && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onHide}
-          className="absolute top-0 right-0 mt-2 mr-2 px-3 py-1 rounded bg-[#E0245E] text-white text-sm font-semibold hover:bg-[#c81d4a] transition z-0"
-          aria-label="Hide Integrations"
+          className="absolute top-3 right-3 z-10 h-7 w-7 rounded-lg text-white/30 hover:text-[#E0245E] hover:bg-[#E0245E]/10"
         >
-          <X size={16} className="inline" />
-        </button>
+          <X className="w-4 h-4" />
+        </Button>
       )}
-      {/* Integration Cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-l-4 border-l-[#1DA1F2]">
-          <div className="flex flex-col items-center text-center">
-            <div className="bg-[#1DA1F2]/10 p-3 rounded-full mb-4">
-              <Twitter size={24} className="text-[#1DA1F2]" />
-            </div>
-            <h3 className="text-white font-medium mb-1">X (Twitter)</h3>
-            <p className="text-[#8899A6] text-sm mb-4">
-              {user?.twitterConnected
-                ? 'Your account is connected'
-                : 'Connect your Twitter account to schedule tweets'}
-            </p>
+        {integrations.map((integration) => (
+          <Card
+            key={integration.id}
+            className="bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1] transition-all duration-300 overflow-hidden group"
+          >
+            {/* Top accent line */}
+            <div className="h-0.5 w-full" style={{ backgroundColor: `${integration.color}30` }} />
 
-            <div className="mt-2 w-full">
-              {user?.twitterConnected ? (
-                <div className="flex items-center justify-center text-[#17BF63] bg-[#17BF63]/10 p-2 rounded-md">
-                  <CheckCircle size={16} className="mr-2" />
-                  <span>Connected</span>
-                </div>
-              ) : (
-                <OAuthButton
-                  provider="twitter"
-                  onClick={connectTwitter}
-                />
-              )}
-            </div>
-          </div>
-        </Card>
+            <CardContent className="p-5 flex flex-col items-center text-center">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                style={{ backgroundColor: `${integration.color}12`, color: integration.color }}
+              >
+                {integration.icon}
+              </div>
 
-        <Card className="border-l-4 border-l-[#6E5494]">
-          <div className="flex flex-col items-center text-center">
-            <div className="bg-[#6E5494]/10 p-3 rounded-full mb-4">
-              <Github size={24} className="text-[#6E5494]" />
-            </div>
-            <h3 className="text-white font-medium mb-1">GitHub</h3>
-            <p className="text-[#8899A6] text-sm mb-4">
-              {user?.githubConnected
-                ? 'Your account is connected'
-                : 'Connect GitHub to share your contributions'}
-            </p>
+              <h3 className="text-white font-semibold text-sm mb-1">{integration.name}</h3>
+              <p className="text-white/30 text-xs mb-4 leading-relaxed">{integration.description}</p>
 
-            <div className="mt-2 w-full">
-              {user?.githubConnected ? (
-                <div className="flex items-center justify-center text-[#17BF63] bg-[#17BF63]/10 p-2 rounded-md">
-                  <CheckCircle size={16} className="mr-2" />
-                  <span>Connected</span>
-                </div>
-              ) :
-                (
-                  <>
-                    {showGithubInput ? (
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="Your Github username"
-                          value={githubUsername}
-                          onChange={(e) => setGithubUsername(e.target.value)}
-                          fullWidth
-                        />
-                        <Button
-                          onClick={handleGithubConnect}
-                          isLoading={isConnectingGithub}
-                          fullWidth
-                        >
-                          Connect
-                        </Button>
-                      </div>
-                    ) : (
-                      <OAuthButton
-                        provider="github"
-                        onClick={handleGithubConnect}
-                        disabled={!user?.twitterConnected}
-                      />
-                    )}
-                  </>
-                )}
-            </div>
-          </div>
-        </Card>
-
-        <Card className="border-l-4 border-l-[#FFAD1F]">
-          <div className="flex flex-col items-center text-center">
-            <div className="bg-[#FFAD1F]/10 p-3 rounded-full mb-4">
-              <Book size={24} className="text-[#FFAD1F]" />
-            </div>
-            <h3 className="text-white font-medium mb-1">LeetCode</h3>
-            <p className="text-[#8899A6] text-sm mb-4">
-              {user?.leetCodeConnected
-                ? 'Your account is connected'
-                : 'Connect LeetCode to share your progress'}
-            </p>
-
-            <div className="mt-2 w-full">
-              {user?.leetCodeConnected ? (
-                <div className="flex items-center justify-center text-[#17BF63] bg-[#17BF63]/10 p-2 rounded-md">
-                  <CheckCircle size={16} className="mr-2" />
-                  <span>Connected</span>
-                </div>
-              ) : (
-                <>
-                  {showLeetCodeInput ? (
-                    <div className="space-y-2">
+              <div className="w-full mt-auto">
+                {integration.connected ? (
+                  <Badge className="w-full justify-center py-2 bg-[#17BF63]/10 text-[#17BF63] border-[#17BF63]/20 hover:bg-[#17BF63]/15 rounded-xl gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Connected
+                  </Badge>
+                ) : integration.id === 'twitter' ? (
+                  <Button
+                    onClick={connectTwitter}
+                    className="w-full rounded-xl bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white font-medium text-sm h-9"
+                    size="sm"
+                  >
+                    <Twitter className="w-4 h-4 mr-2" />
+                    Connect
+                  </Button>
+                ) : integration.id === 'github' ? (
+                  showGithubInput ? (
+                    <div className="space-y-2 w-full">
                       <Input
-                        placeholder="Your LeetCode username"
-                        value={leetCodeUsername}
-                        onChange={(e) => setLeetCodeUsername(e.target.value)}
-                        fullWidth
+                        placeholder="GitHub username"
+                        value={githubUsername}
+                        onChange={(e) => setGithubUsername(e.target.value)}
+                        className="h-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl text-sm"
                       />
                       <Button
-                        onClick={handleLeetCodeConnect}
-                        isLoading={isConnectingLeetCode}
-                        fullWidth
+                        onClick={handleGithubConnect}
+                        disabled={isConnectingGithub || !githubUsername}
+                        className="w-full rounded-xl bg-[#6E5494] hover:bg-[#6E5494]/90 text-white font-medium text-sm h-9"
+                        size="sm"
                       >
-                        Connect
+                        {isConnectingGithub ? 'Connecting...' : 'Connect'}
                       </Button>
                     </div>
                   ) : (
-                    <OAuthButton
-                      provider="leetcode"
+                    <Button
+                      onClick={handleGithubConnect}
+                      disabled={!user?.twitterConnected}
+                      className="w-full rounded-xl bg-[#6E5494] hover:bg-[#6E5494]/90 text-white font-medium text-sm h-9 disabled:opacity-30"
+                      size="sm"
+                    >
+                      <Github className="w-4 h-4 mr-2" />
+                      Connect
+                    </Button>
+                  )
+                ) : integration.id === 'leetcode' ? (
+                  showLeetCodeInput ? (
+                    <div className="space-y-2 w-full">
+                      <Input
+                        placeholder="LeetCode username"
+                        value={leetCodeUsername}
+                        onChange={(e) => setLeetCodeUsername(e.target.value)}
+                        className="h-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl text-sm"
+                      />
+                      <Button
+                        onClick={handleLeetCodeConnect}
+                        disabled={isConnectingLeetCode || !leetCodeUsername}
+                        className="w-full rounded-xl bg-[#FFAD1F] hover:bg-[#FFAD1F]/90 text-black font-medium text-sm h-9"
+                        size="sm"
+                      >
+                        {isConnectingLeetCode ? 'Connecting...' : 'Connect'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
                       onClick={handleLeetCodeConnect}
                       disabled={!user?.twitterConnected}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
+                      className="w-full rounded-xl bg-[#FFAD1F] hover:bg-[#FFAD1F]/90 text-black font-medium text-sm h-9 disabled:opacity-30"
+                      size="sm"
+                    >
+                      <Book className="w-4 h-4 mr-2" />
+                      Connect
+                    </Button>
+                  )
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

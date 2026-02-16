@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
-import Card from '../common/Card';
-import Button from '../common/Button';
 import { CalendarClock, Trash2, Edit3, Plus, CheckCircle, Clock, RefreshCw, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import TweetSettingsModal from './TweetSettingsModal';
 import { toast } from 'react-hot-toast';
 
@@ -38,20 +40,16 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // If initialTweets is provided, use them
     if (initialTweets && initialTweets.length > 0) {
       setTweets(initialTweets);
       setLoading(false);
       return;
     }
-
     fetchTweets();
   }, [initialTweets, userId]);
 
   const handleSettingsSave = async (settings: { time: string; timezone: string }) => {
     setTweetSettings(settings);
-
-    // Find the botId from the first tweet (or however you want to get it)
     const botId = localStorage.getItem('dashboard_data') ? JSON.parse(localStorage.getItem('dashboard_data') || '{}').botId : null;
     if (!botId) {
       setError('Bot ID not found for updating schedule.');
@@ -61,19 +59,12 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
     try {
       const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/tweet/update-schedule`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          botId,
-          time: settings.time
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ botId, time: settings.time }),
       });
-
       const data = await response.json();
       if (response.ok && data.status === 'SUCCESS') {
         toast.success('Schedule updated successfully!');
-        console.log('Schedule updated successfully:', data);
         setIsSettingsOpen(false);
       } else {
         setError(data.message || 'Failed to update schedule');
@@ -83,48 +74,48 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
     }
   };
 
-  // Format API date
   const formatDate = (dateString: string) => {
     try {
       return format(parseISO(dateString), 'MMM d, yyyy h:mm a');
     } catch (error) {
-      console.error('Error formatting date:', error);
       return 'Invalid date';
     }
   };
 
-  // Get status icon and color
   const getStatusDetails = (status: string) => {
     switch (status.toUpperCase()) {
       case 'SENT':
         return {
-          icon: <CheckCircle size={14} className="text-[#17BF63]" />,
+          icon: <CheckCircle className="w-3.5 h-3.5 text-[#17BF63]" />,
           text: 'Sent',
-          color: 'text-[#17BF63]'
+          color: 'text-[#17BF63]',
+          badgeClass: 'border-[#17BF63]/20 text-[#17BF63] bg-[#17BF63]/5',
         };
       case 'SCHEDULED':
         return {
-          icon: <Clock size={14} className="text-[#FFAD1F]" />,
+          icon: <Clock className="w-3.5 h-3.5 text-[#FFAD1F]" />,
           text: 'Scheduled',
-          color: 'text-[#FFAD1F]'
+          color: 'text-[#FFAD1F]',
+          badgeClass: 'border-[#FFAD1F]/20 text-[#FFAD1F] bg-[#FFAD1F]/5',
         };
       case 'FAILED':
         return {
-          icon: <Trash2 size={14} className="text-[#E0245E]" />,
+          icon: <Trash2 className="w-3.5 h-3.5 text-[#E0245E]" />,
           text: 'Failed',
-          color: 'text-[#E0245E]'
+          color: 'text-[#E0245E]',
+          badgeClass: 'border-[#E0245E]/20 text-[#E0245E] bg-[#E0245E]/5',
         };
       default:
         return {
-          icon: <Clock size={14} className="text-[#FFAD1F]" />,
+          icon: <Clock className="w-3.5 h-3.5 text-[#FFAD1F]" />,
           text: 'Scheduled',
-          color: 'text-[#FFAD1F]'
+          color: 'text-[#FFAD1F]',
+          badgeClass: 'border-[#FFAD1F]/20 text-[#FFAD1F] bg-[#FFAD1F]/5',
         };
     }
   };
 
   const fetchTweets = async () => {
-    // Check if userId is available
     const currentUserId = userId || localStorage.getItem('user_id');
     if (!currentUserId) {
       setError('User ID not found');
@@ -132,7 +123,6 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
       return;
     }
 
-    // Check if tweets are in localStorage first
     const storedTweets = localStorage.getItem('tweets');
     if (storedTweets) {
       try {
@@ -142,7 +132,6 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
         return;
       } catch (e) {
         console.error('Failed to parse stored tweets', e);
-        // Continue with API fetch if parsing fails
       }
     }
 
@@ -152,25 +141,19 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
     try {
       const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/tweet/${currentUserId}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch tweets');
-      }
+      if (!response.ok) throw new Error('Failed to fetch tweets');
 
       const result = await response.json();
       if (result.status === 'SUCCESS' && result.data) {
         setTweets(result.data);
-        // Store tweets in localStorage for future use
         localStorage.setItem('tweets', JSON.stringify(result.data));
       } else {
         setError(result.message || 'Failed to fetch tweets');
       }
     } catch (error) {
-      console.error('Error fetching tweets:', error);
       setError('Error fetching tweets. Please try again.');
     } finally {
       setLoading(false);
@@ -179,137 +162,117 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
 
   const handleDeleteTweet = async (tweetId: string) => {
     if (!onDeleteTweet) {
-      // Handle deletion within the component if no callback is provided
       try {
         const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/tweet/${tweetId}`, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete tweet');
-        }
-
-        // Remove tweet from state
+        if (!response.ok) throw new Error('Failed to delete tweet');
         const updatedTweets = tweets.filter(tweet => tweet.id !== tweetId);
         setTweets(updatedTweets);
-        // Update localStorage
         localStorage.setItem('tweets', JSON.stringify(updatedTweets));
       } catch (error) {
-        console.error('Error deleting tweet:', error);
         setError('Failed to delete tweet. Please try again.');
       }
     } else {
-      // Use the callback if provided
       onDeleteTweet(tweetId);
     }
   };
 
   const handleRefresh = () => {
-    // Clear localStorage and refetch
     localStorage.removeItem('tweets');
     fetchTweets();
   };
 
   return (
     <>
-      <Card
-        title="Tweets"
-        subtitle="Manage your scheduled and sent tweets"
-        rightContent={
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="!p-1 h-8 w-8 rounded-full"
-              onClick={handleRefresh}
-            >
-              <RefreshCw size={14} />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="!p-1 h-8 w-8 rounded-full hover:bg-[#38444D]"
-              onClick={() => setIsSettingsOpen(true)}
-            >
-              <Settings size={14} />
-            </Button>
-          </div>
-        }
-        footer={
-          <div className="flex justify-end disabled">
-            <Button
-              variant="primary"
-              icon={<Plus size={16} />}
-              className='opacity-50 cursor-not-allowed'
-            >
-              New Tweet Schedule
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#1DA1F2]"></div>
+      <Card className="bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1] transition-all duration-300">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold text-white">Tweets</CardTitle>
+              <CardDescription className="text-white/25 text-xs mt-0.5">Manage your scheduled and sent tweets</CardDescription>
             </div>
-          ) : error ? (
-            <div className="text-center py-6">
-              <p className="text-[#E0245E]">{error}</p>
+            <div className="flex items-center gap-1.5">
               <Button
-                variant="secondary"
-                size="sm"
-                className="mt-2"
+                variant="ghost"
+                size="icon"
                 onClick={handleRefresh}
+                className="h-8 w-8 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06]"
               >
-                Try Again
+                <RefreshCw className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSettingsOpen(true)}
+                className="h-8 w-8 rounded-xl text-white/30 hover:text-white hover:bg-white/[0.06]"
+              >
+                <Settings className="w-3.5 h-3.5" />
               </Button>
             </div>
-          ) : tweets.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-[#8899A6]">No tweets found.</p>
-              <p className="text-sm text-[#657786] mt-1">
-                Create your first scheduled tweet to showcase your coding achievements.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {tweets.map((tweet) => {
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="space-y-3">
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="w-8 h-8 rounded-full border-2 border-[#1DA1F2]/20 border-t-[#1DA1F2] animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <p className="text-[#E0245E] text-sm mb-3">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="rounded-xl border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.04]"
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : tweets.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-white/30 text-sm font-medium">No tweets found.</p>
+                <p className="text-white/15 text-xs mt-1">
+                  Create your first scheduled tweet to showcase your coding achievements.
+                </p>
+              </div>
+            ) : (
+              tweets.map((tweet) => {
                 const statusDetails = getStatusDetails(tweet.status);
                 return (
                   <div
                     key={tweet.id}
-                    className="bg-[#1C2732] p-4 rounded-lg border border-[#38444D]"
+                    className="bg-white/[0.03] p-4 rounded-xl border border-white/[0.04] hover:border-white/[0.08] transition-all group"
                   >
-                    <div className="flex justify-between items-start">
-                      <p className="text-white">{tweet.content}</p>
-                      <div className="flex space-x-1">
+                    <div className="flex justify-between items-start gap-3">
+                      <p className="text-white/80 text-sm leading-relaxed flex-1">{tweet.content}</p>
+                      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         {tweet.status.toUpperCase() !== 'SENT' && (
                           <>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="!p-1 h-8 w-8 rounded-full hover:bg-[#38444D]"
-                            >
-                              <Edit3 size={14} />
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-white/20 hover:text-white hover:bg-white/[0.06]">
+                              <Edit3 className="w-3 h-3" />
                             </Button>
                             <Button
-                              variant="danger"
-                              size="sm"
-                              className="!p-1 h-8 w-8 rounded-full"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 rounded-lg text-white/20 hover:text-[#E0245E] hover:bg-[#E0245E]/10"
                               onClick={() => handleDeleteTweet(tweet.id)}
                             >
-                              <Trash2 size={14} />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                           </>
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center justify-between text-[#8899A6] text-sm mt-3">
-                      <div className="flex items-center">
-                        <CalendarClock size={14} className="mr-2" />
+
+                    <Separator className="my-3 bg-white/[0.04]" />
+
+                    <div className="flex flex-wrap items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-white/20">
+                        <CalendarClock className="w-3.5 h-3.5" />
                         <span>
                           {tweet.status.toUpperCase() === 'SENT'
                             ? `Sent on ${formatDate(tweet.schedule_time)}`
@@ -317,34 +280,45 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
                           }
                         </span>
                       </div>
-                      <div className={`flex items-center ${statusDetails.color} mt-1 sm:mt-0`}>
+                      <Badge variant="outline" className={`rounded-full text-[10px] px-2 py-0.5 ${statusDetails.badgeClass}`}>
                         {statusDetails.icon}
                         <span className="ml-1">{statusDetails.text}</span>
-                      </div>
+                      </Badge>
                     </div>
 
-                    {/* Show contribution metrics if any */}
                     {(tweet.github_contribution > 0 || tweet.leetcode_contribution > 0) && (
-                      <div className="flex flex-wrap gap-2 mt-2 text-xs text-[#8899A6]">
+                      <div className="flex flex-wrap gap-2 mt-2.5">
                         {tweet.github_contribution > 0 && (
-                          <span className="bg-[#192734] px-2 py-1 rounded-full">
+                          <Badge variant="outline" className="text-[10px] border-white/[0.06] bg-white/[0.02] text-white/30 rounded-full">
                             GitHub: {tweet.github_contribution} commits
-                          </span>
+                          </Badge>
                         )}
                         {tweet.leetcode_contribution > 0 && (
-                          <span className="bg-[#192734] px-2 py-1 rounded-full">
+                          <Badge variant="outline" className="text-[10px] border-white/[0.06] bg-white/[0.02] text-white/30 rounded-full">
                             LeetCode: {tweet.leetcode_contribution} problems
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     )}
                   </div>
                 );
-              })}
-            </div>
-          )}
-        </div>
+              })
+            )}
+          </div>
+        </CardContent>
+
+        <CardFooter className="pt-0 pb-4 px-6">
+          <Button
+            variant="outline"
+            className="w-full rounded-xl border-white/[0.06] text-white/30 hover:text-white/50 hover:bg-white/[0.03] cursor-not-allowed opacity-50"
+            disabled
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Tweet Schedule
+          </Button>
+        </CardFooter>
       </Card>
+
       <TweetSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

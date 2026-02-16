@@ -1,7 +1,24 @@
 import React, { useState } from 'react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
 import { Clock, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 interface TweetSettingsModalProps {
   isOpen: boolean;
@@ -37,10 +54,7 @@ const TweetSettingsModal: React.FC<TweetSettingsModalProps> = ({
   ];
 
   const handleSave = () => {
-    onSave({
-      time: selectedTime,
-      timezone: selectedTimezone
-    });
+    onSave({ time: selectedTime, timezone: selectedTimezone });
     onClose();
   };
 
@@ -50,99 +64,92 @@ const TweetSettingsModal: React.FC<TweetSettingsModalProps> = ({
     onClose();
   };
 
-  const footer = (
-    <div className="flex justify-end space-x-3">
-      <Button
-        variant="outline"
-        onClick={handleCancel}
-      >
-        Cancel
-      </Button>
-      <Button
-        onClick={handleSave}
-      >
-        Save Settings
-      </Button>
-    </div>
-  );
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Tweet Schedule Settings"
-      footer={footer}
-      size="md"
-    >
-      <div className="space-y-6">
-        {/* Time Selection */}
-        <div>
-          <label className="block text-white font-medium mb-3">
-            <Clock size={18} className="inline mr-2" />
-            Daily Tweet Time
-          </label>
-          <div className="bg-[#253341] border border-[#38444D] rounded-md p-4">
-            <input
-              type="time"
-              value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
-              className="bg-transparent text-white text-lg font-mono w-full focus:outline-none"
-              style={{
-                colorScheme: 'dark'
-              }}
-            />
-            <p className="text-[#8899A6] text-sm mt-2">
-              Your tweets will be automatically posted at this time every day
-            </p>
-          </div>
-        </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="bg-[#161B22] border-white/[0.08] text-white rounded-2xl shadow-2xl max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-display font-bold text-white">Tweet Schedule Settings</DialogTitle>
+        </DialogHeader>
 
-        {/* Timezone Selection */}
-        <div>
-          <label className="block text-white font-medium mb-3">
-            <Globe size={18} className="inline mr-2" />
-            Timezone
-          </label>
-          <div className="relative">
-            <select
-              value={selectedTimezone}
-              disabled
-              onChange={(e) => setSelectedTimezone(e.target.value)}
-              className="w-full bg-[#253341] border border-[#38444D] text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1DA1F2] focus:border-transparent appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {timezones.map((tz) => (
-                <option key={tz.value} value={tz.value} className="bg-[#253341] text-white">
-                  {tz.label}
-                </option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <svg className="w-4 h-4 text-[#8899A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
+        <div className="space-y-6 py-2">
+          {/* Time Selection */}
+          <div className="space-y-3">
+            <Label className="text-white/70 font-medium flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-[#1DA1F2]" />
+              Daily Tweet Time
+            </Label>
+            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+              <Input
+                type="time"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="bg-transparent border-none text-white text-lg font-mono p-0 h-auto focus-visible:ring-0"
+                style={{ colorScheme: 'dark' }}
+              />
+              <p className="text-white/20 text-xs mt-2 font-medium">
+                Your tweets will be automatically posted at this time every day
+              </p>
             </div>
           </div>
-          <p className="text-[#8899A6] text-sm mt-2">
-            Select your preferred timezone for scheduling tweets
-          </p>
+
+          {/* Timezone Selection */}
+          <div className="space-y-3">
+            <Label className="text-white/70 font-medium flex items-center gap-2 text-sm">
+              <Globe className="w-4 h-4 text-[#1DA1F2]" />
+              Timezone
+            </Label>
+            <Select value={selectedTimezone} disabled onValueChange={setSelectedTimezone}>
+              <SelectTrigger className="bg-white/[0.03] border-white/[0.06] text-white rounded-xl h-11 focus:ring-[#1DA1F2]/30 disabled:opacity-50">
+                <SelectValue placeholder="Select timezone" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#161B22] border-white/[0.08] text-white rounded-xl">
+                {timezones.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value} className="rounded-lg hover:bg-white/[0.06] focus:bg-white/[0.06] focus:text-white">
+                    {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-white/20 text-xs font-medium">
+              Select your preferred timezone for scheduling tweets
+            </p>
+          </div>
+
+          <Separator className="bg-white/[0.06]" />
+
+          {/* Preview */}
+          <Card className="bg-white/[0.03] border-white/[0.06] rounded-xl">
+            <CardContent className="p-4">
+              <h4 className="text-white font-medium text-sm mb-2">Preview</h4>
+              <p className="text-white/30 text-xs">
+                Your next tweet will be posted at{' '}
+                <span className="text-[#1DA1F2] font-semibold">{selectedTime}</span>
+                {' '}in{' '}
+                <span className="text-[#1DA1F2] font-semibold">
+                  {timezones.find(tz => tz.value === selectedTimezone)?.label}
+                </span>
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Preview */}
-        <div className="bg-[#1C2732] border border-[#38444D] rounded-md p-4">
-          <h4 className="text-white font-medium mb-2">Preview</h4>
-          <p className="text-[#8899A6] text-sm">
-            Your next tweet will be posted at{' '}
-            <span className="text-[#1DA1F2] font-medium">
-              {selectedTime}
-            </span>{' '}
-            in{' '}
-            <span className="text-[#1DA1F2] font-medium">
-              {timezones.find(tz => tz.value === selectedTimezone)?.label}
-            </span>
-          </p>
-        </div>
-      </div>
-    </Modal>
+        <DialogFooter className="gap-3 sm:gap-3">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="rounded-xl border-white/[0.08] text-white/50 hover:text-white hover:bg-white/[0.04] flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="rounded-xl bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white font-medium flex-1"
+          >
+            Save Settings
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

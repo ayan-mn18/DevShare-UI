@@ -1,6 +1,6 @@
 import React from 'react';
-import Button from '../common/Button';
 import { Github, Twitter, Book } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type ProviderType = 'twitter' | 'github' | 'leetcode';
 
@@ -19,41 +19,44 @@ const OAuthButton: React.FC<OAuthButtonProps> = ({
   isLoading = false,
   disabled = false
 }) => {
-  const getProviderIcon = () => {
-    switch (provider) {
-      case 'twitter':
-        return <Twitter size={18} />;
-      case 'github':
-        return <Github size={18} />;
-      case 'leetcode':
-        return <Book size={18} />;
-    }
-  };
+  const config = {
+    twitter: {
+      icon: <Twitter className="w-4 h-4" />,
+      label: 'X (Twitter)',
+      color: 'bg-[#1DA1F2] hover:bg-[#1DA1F2]/90',
+      connectedColor: 'bg-[#17BF63]/10 text-[#17BF63] border-[#17BF63]/20',
+    },
+    github: {
+      icon: <Github className="w-4 h-4" />,
+      label: 'GitHub',
+      color: 'bg-[#6E5494] hover:bg-[#6E5494]/90',
+      connectedColor: 'bg-[#17BF63]/10 text-[#17BF63] border-[#17BF63]/20',
+    },
+    leetcode: {
+      icon: <Book className="w-4 h-4" />,
+      label: 'LeetCode',
+      color: 'bg-[#FFAD1F] hover:bg-[#FFAD1F]/90 text-black',
+      connectedColor: 'bg-[#17BF63]/10 text-[#17BF63] border-[#17BF63]/20',
+    },
+  }[provider];
 
-  const getProviderText = () => {
-    const action = isConnected ? 'Connected to' : 'Connect with';
-
-    switch (provider) {
-      case 'twitter':
-        return `${action} X (Twitter)`;
-      case 'github':
-        return `${action} GitHub`;
-      case 'leetcode':
-        return `${action} LeetCode`;
-    }
-  };
+  const action = isConnected ? 'Connected to' : 'Connect with';
 
   return (
     <Button
-      variant={isConnected ? 'secondary' : 'primary'}
-      icon={getProviderIcon()}
+      variant={isConnected ? 'outline' : 'default'}
       onClick={onClick}
-      isLoading={isLoading}
       disabled={disabled || isConnected}
-      className={isConnected ? 'border border-green-500 bg-opacity-10' : ''}
-      fullWidth
+      className={`w-full rounded-xl font-medium text-sm h-10 transition-all gap-2 ${
+        isConnected ? config.connectedColor : `${config.color} text-white`
+      }`}
     >
-      {getProviderText()}
+      {isLoading ? (
+        <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+      ) : (
+        config.icon
+      )}
+      {action} {config.label}
     </Button>
   );
 };

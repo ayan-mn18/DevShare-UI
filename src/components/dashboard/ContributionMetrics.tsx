@@ -1,6 +1,7 @@
 import React from 'react';
-import Card from '../common/Card';
 import { GitCommit, CheckCircle, Code, Award, Users, ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface GithubMetrics {
   contributions: Array<{ date: string; count: number }>;
@@ -35,7 +36,6 @@ const ContributionMetrics: React.FC<ContributionMetricsProps> = ({
   githubUsername,
   leetcodeUsername
 }) => {
-  // Format date from ISO string to "X days ago"
   const formatDate = (isoDate: string): string => {
     const date = new Date(isoDate);
     const now = new Date();
@@ -47,66 +47,55 @@ const ContributionMetrics: React.FC<ContributionMetricsProps> = ({
     return `${diffDays} days ago`;
   };
 
-  // Get contribution color based on count
   const getContributionColor = (value: number) => {
-    if (value === 0) return 'bg-[#2C3640]';
-    if (value <= 3) return 'bg-[#0E4C73]';
-    if (value <= 6) return 'bg-[#1A78BD]';
+    if (value === 0) return 'bg-white/[0.03]';
+    if (value <= 3) return 'bg-[#1DA1F2]/30';
+    if (value <= 6) return 'bg-[#1DA1F2]/60';
     return 'bg-[#1DA1F2]';
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card
-        title="GitHub Activity"
-        subtitle="Your recent contributions"
-        rightContent={
-          githubUsername && (
-            <a
-              href={`https://github.com/${githubUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-[#1DA1F2] hover:underline text-sm"
-            >
-              @{githubUsername}
-              <ExternalLink size={14} className="ml-1" />
-            </a>
-          )
-        }
-      >
-        <div className="space-y-4">
+      {/* GitHub Activity Card */}
+      <Card className="bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1] transition-all duration-300">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold text-white">GitHub Activity</CardTitle>
+              <CardDescription className="text-white/25 text-xs mt-0.5">Your recent contributions</CardDescription>
+            </div>
+            {githubUsername && (
+              <a
+                href={`https://github.com/${githubUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-[#1DA1F2] hover:underline text-xs font-medium gap-1 group"
+              >
+                @{githubUsername}
+                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Commits</p>
-              <div className="flex items-center mt-1">
-                <GitCommit size={16} className="text-[#1DA1F2] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {githubMetrics?.totalCommits || 0}
-                </span>
+            {[
+              { label: 'Commits', icon: <GitCommit className="w-4 h-4 text-[#1DA1F2]" />, value: githubMetrics?.totalCommits || 0 },
+              { label: 'Streak', icon: <GitCommit className="w-4 h-4 text-[#1DA1F2]" />, value: `${githubMetrics?.streak || 0} days` },
+              { label: 'Followers', icon: <Users className="w-4 h-4 text-[#1DA1F2]" />, value: githubMetrics?.followers || 0 },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.04]">
+                <p className="text-white/25 text-xs font-medium mb-1.5">{stat.label}</p>
+                <div className="flex items-center gap-2">
+                  {stat.icon}
+                  <span className="text-white font-bold text-sm">{stat.value}</span>
+                </div>
               </div>
-            </div>
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Streak</p>
-              <div className="flex items-center mt-1">
-                <GitCommit size={16} className="text-[#1DA1F2] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {githubMetrics?.streak || 0} days
-                </span>
-              </div>
-            </div>
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Followers</p>
-              <div className="flex items-center mt-1">
-                <Users size={16} className="text-[#1DA1F2] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {githubMetrics?.followers || 0}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="mt-4">
-            <p className="text-[#8899A6] text-sm mb-2">Contribution Activity</p>
+          <div>
+            <p className="text-white/25 text-xs font-medium mb-2.5">Contribution Activity</p>
             <div className="flex gap-1">
               {githubMetrics?.contributions && githubMetrics.contributions.length > 0
                 ? githubMetrics.contributions
@@ -115,111 +104,100 @@ const ContributionMetrics: React.FC<ContributionMetricsProps> = ({
                   .map((contrib, index) => (
                     <div
                       key={index}
-                      className={`h-8 w-full ${getContributionColor(contrib.count)} rounded-sm tooltip`}
+                      className={`h-8 w-full ${getContributionColor(contrib.count)} rounded-md tooltip transition-colors`}
                       title={`${contrib.date}: ${contrib.count} contributions`}
                     />
                   ))
                 : Array(12).fill(0).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-8 w-full bg-[#2C3640] rounded-sm"
-                  />
+                  <div key={index} className="h-8 w-full bg-white/[0.03] rounded-md" />
                 ))
               }
             </div>
-            <div className="flex justify-between text-xs text-[#8899A6] mt-1">
+            <div className="flex justify-between text-[10px] text-white/15 mt-1.5 font-medium">
               <span>12 days ago</span>
               <span>Today</span>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
 
-      <Card
-        title="LeetCode Progress"
-        subtitle="Your coding challenge stats"
-        rightContent={
-          leetcodeUsername && (
-            <a
-              href={`https://leetcode.com/u/${leetcodeUsername}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-[#17BF63] hover:underline text-sm"
-            >
-              @{leetcodeUsername}
-              <ExternalLink size={14} className="ml-1" />
-            </a>
-          )
-        }
-      >
-        <div className="space-y-4">
+      {/* LeetCode Progress Card */}
+      <Card className="bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1] transition-all duration-300">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base font-semibold text-white">LeetCode Progress</CardTitle>
+              <CardDescription className="text-white/25 text-xs mt-0.5">Your coding challenge stats</CardDescription>
+            </div>
+            {leetcodeUsername && (
+              <a
+                href={`https://leetcode.com/u/${leetcodeUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-[#17BF63] hover:underline text-xs font-medium gap-1 group"
+              >
+                @{leetcodeUsername}
+                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Solved</p>
-              <div className="flex items-center mt-1">
-                <CheckCircle size={16} className="text-[#17BF63] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {leetCodeMetrics?.totalSolved || 0}/{leetCodeMetrics?.totalQuestions || 0}
-                </span>
+            {[
+              { label: 'Solved', icon: <CheckCircle className="w-4 h-4 text-[#17BF63]" />, value: `${leetCodeMetrics?.totalSolved || 0}/${leetCodeMetrics?.totalQuestions || 0}` },
+              { label: 'Streak', icon: <CheckCircle className="w-4 h-4 text-[#17BF63]" />, value: `${leetCodeMetrics?.streak || 0} days` },
+              { label: 'Rating', icon: <Award className="w-4 h-4 text-[#17BF63]" />, value: leetCodeMetrics?.contestRating || 0 },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white/[0.03] rounded-xl p-3 border border-white/[0.04]">
+                <p className="text-white/25 text-xs font-medium mb-1.5">{stat.label}</p>
+                <div className="flex items-center gap-2">
+                  {stat.icon}
+                  <span className="text-white font-bold text-sm">{stat.value}</span>
+                </div>
               </div>
-            </div>
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Streak</p>
-              <div className="flex items-center mt-1">
-                <CheckCircle size={16} className="text-[#17BF63] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {leetCodeMetrics?.streak || 0} days
-                </span>
-              </div>
-            </div>
-            <div className="bg-[#1C2732] p-3 rounded-lg">
-              <p className="text-[#8899A6] text-sm">Rating</p>
-              <div className="flex items-center mt-1">
-                <Award size={16} className="text-[#17BF63] mr-2" />
-                <span className="text-white text-lg font-semibold">
-                  {leetCodeMetrics?.contestRating || 0}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="mt-2">
-            <p className="text-[#8899A6] text-sm mb-2">Recently Solved</p>
+          <div>
+            <p className="text-white/25 text-xs font-medium mb-2.5">Recently Solved</p>
             <div className="space-y-2">
               {leetCodeMetrics?.recentSubmissions && leetCodeMetrics.recentSubmissions.length > 0
                 ? leetCodeMetrics.recentSubmissions.slice(0, 3).map((problem, index) => (
-                  <div key={index} className="bg-[#1C2732] p-2 rounded-lg flex justify-between items-center">
+                  <div key={index} className="bg-white/[0.03] p-2.5 rounded-xl border border-white/[0.04] flex justify-between items-center group hover:border-white/[0.08] transition-colors">
                     <div>
-                      <p className="text-white text-sm">{problem.title}</p>
-                      <p className="text-xs text-[#8899A6]">{formatDate(problem.timestamp)}</p>
+                      <p className="text-white text-sm font-medium">{problem.title}</p>
+                      <p className="text-[10px] text-white/20 mt-0.5">{formatDate(problem.timestamp)}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${problem.difficulty === 'Easy'
-                      ? 'bg-[#17BF63]/10 text-[#17BF63]'
-                      : problem.difficulty === 'Medium'
-                        ? 'bg-[#FFAD1F]/10 text-[#FFAD1F]'
-                        : 'bg-[#E0245E]/10 text-[#E0245E]'
-                      }`}>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                        problem.difficulty === 'Easy'
+                          ? 'border-[#17BF63]/20 text-[#17BF63] bg-[#17BF63]/5'
+                          : problem.difficulty === 'Medium'
+                            ? 'border-[#FFAD1F]/20 text-[#FFAD1F] bg-[#FFAD1F]/5'
+                            : 'border-[#E0245E]/20 text-[#E0245E] bg-[#E0245E]/5'
+                      }`}
+                    >
                       {problem.difficulty}
-                    </span>
+                    </Badge>
                   </div>
                 ))
                 : (
-                  <div className="bg-[#1C2732] p-2 rounded-lg">
-                    <p className="text-[#8899A6] text-sm text-center">No recent submissions</p>
+                  <div className="bg-white/[0.03] p-3 rounded-xl border border-white/[0.04]">
+                    <p className="text-white/20 text-sm text-center">No recent submissions</p>
                   </div>
                 )
               }
             </div>
             <div className="mt-3 text-center">
-              <div className="inline-flex items-center bg-[#1C2732] px-3 py-1 rounded-full">
-                <Code size={14} className="text-[#17BF63] mr-2" />
-                <span className="text-white text-sm">
-                  Level: {leetCodeMetrics?.level || 'Beginner'}
-                </span>
-              </div>
+              <Badge variant="outline" className="border-white/[0.08] bg-white/[0.03] text-white/60 rounded-full gap-1.5">
+                <Code className="w-3 h-3 text-[#17BF63]" />
+                Level: {leetCodeMetrics?.level || 'Beginner'}
+              </Badge>
             </div>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   );

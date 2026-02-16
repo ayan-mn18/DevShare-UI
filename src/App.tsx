@@ -6,34 +6,16 @@ import OAuthRedirect from './pages/OAuthRedirect';
 import ErrorPage from './pages/ErrorPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import EmailModal from './components/auth/EmailModal';
-import Toast from './components/common/Toast';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 
 function AppContent() {
   const { user, setUserEmail } = useAuth();
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailCollected, setEmailCollected] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'info';
-    visible: boolean;
-  }>({ message: '', type: 'info', visible: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log('url:', import.meta.env.VITE_REACT_SERVER_URL);
   }, []);
-
-
-
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ message, type, visible: true });
-
-    // Auto-hide toast after 5 seconds
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
-    }, 5000);
-  };
 
   const handleEmailSubmit = async (email: string) => {
     setIsSubmitting(true);
@@ -45,7 +27,6 @@ function AppContent() {
         throw new Error('User ID not found');
       }
 
-      // Make API call to update email
       const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/dashboard/add-email`, {
         method: 'POST',
         headers: {
@@ -59,25 +40,19 @@ function AppContent() {
         throw new Error(errorData.message || 'Failed to update email');
       }
 
-      // Update localStorage and context
       localStorage.setItem('email_collected', 'true');
       localStorage.setItem('user_email', email);
-      setEmailCollected(true);
 
-      // Update user state in context
       if (setUserEmail) {
         setUserEmail(email);
       }
 
-      showToast('Email successfully updated!', 'success');
+      toast.success('Email successfully updated!');
       setShowEmailModal(false);
 
     } catch (error) {
       console.error('Error updating email:', error);
-      showToast(
-        error instanceof Error ? error.message : 'Failed to update email',
-        'error'
-      );
+      toast.error(error instanceof Error ? error.message : 'Failed to update email');
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +60,7 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#15202B] text-white">
+      <div className="min-h-screen bg-[#0D1117] text-white">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard setShowEmailModal={setShowEmailModal} />} />
@@ -100,14 +75,6 @@ function AppContent() {
             isSubmitting={isSubmitting}
           />
         )}
-
-        {toast.visible && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(prev => ({ ...prev, visible: false }))}
-          />
-        )}
       </div>
     </Router>
   );
@@ -117,7 +84,25 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
-      <Toaster position="bottom-right" />
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#192734',
+            color: '#FFFFFF',
+            border: '1px solid #2C3640',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontFamily: 'Satoshi, sans-serif',
+          },
+          success: {
+            iconTheme: { primary: '#17BF63', secondary: '#192734' },
+          },
+          error: {
+            iconTheme: { primary: '#E0245E', secondary: '#192734' },
+          },
+        }}
+      />
     </AuthProvider>
   );
 }
