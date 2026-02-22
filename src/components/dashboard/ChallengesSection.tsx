@@ -343,7 +343,7 @@ const ChallengesSection: React.FC<ChallengesSectionProps> = ({ userId, onHide })
     if (!useDummyData) {
       const uid = userId || localStorage.getItem('user_id');
       if (uid) {
-        fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/api/v1/challenges/user`, {
+        fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/challenges/user`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: uid }),
@@ -443,6 +443,12 @@ const ChallengesSection: React.FC<ChallengesSectionProps> = ({ userId, onHide })
                               <Trophy size={12} className="text-[#FFAD1F]" />
                               Best: {uc.max_streak}d
                             </span>
+                            {uc.challenge.rules?.allows_rest_days && (
+                              <span className="flex items-center gap-1 text-[#17BF63]">
+                                <Calendar size={12} />
+                                Rest days allowed
+                              </span>
+                            )}
                           </div>
 
                           {/* Progress bar */}

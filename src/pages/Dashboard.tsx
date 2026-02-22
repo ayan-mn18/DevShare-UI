@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, RefreshCw, CreditCard, LayoutDashboard } from 'lucide-react';
@@ -21,7 +21,9 @@ import ScheduledTweets from '../components/dashboard/ScheduledTweets';
 import TestTweetButton from '../components/dashboard/TestTweetButton';
 import ProgressStepper from '../components/onboarding/ProgressStepper';
 import ChallengesSection from '../components/dashboard/ChallengesSection';
-import ChallengeProgress from '../components/dashboard/ChallengeProgress';
+
+// Lazy load ChallengeProgress (heavy recharts dependency)
+const ChallengeProgress = lazy(() => import('../components/dashboard/ChallengeProgress'));
 
 
 // Define types for the dashboard data
@@ -330,11 +332,20 @@ const Dashboard: React.FC<DashboardProps> = ({ setShowEmailModal }) => {
             {allConnected && (
               <>
                 {dashboardData?.user && (
-                  <ChallengeProgress
-                    userId={dashboardData.user.id}
-                    challengeId="ch_100_days_leetcode"
-                    challengeTitle="100 Days of LeetCode"
-                  />
+                  <Suspense fallback={
+                    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6">
+                      <div className="animate-pulse space-y-4">
+                        <div className="h-6 bg-white/[0.04] rounded-lg w-1/3" />
+                        <div className="h-32 bg-white/[0.04] rounded-lg" />
+                      </div>
+                    </div>
+                  }>
+                    <ChallengeProgress
+                      userId={dashboardData.user.id}
+                      challengeId="ch_100_days_leetcode"
+                      challengeTitle="100 Days of LeetCode"
+                    />
+                  </Suspense>
                 )}
                 <ContributionMetrics
                   githubMetrics={dashboardData?.githubMetrics || null}

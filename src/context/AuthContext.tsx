@@ -15,8 +15,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   connectTwitter: () => void;
-  connectGithub: (username: string) => Promise<{ success: boolean; error?: string }>;
-  connectLeetCode: (username: string) => void;
+  connectGithub: () => void;
+  connectLeetCode: (username: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setUserEmail: (email: string) => void;
   updateUser: (userData: Partial<User>) => void;
@@ -141,67 +141,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     window.location.href = '/';
   };
 
-  const connectGithub = async (username: string) => {
+  const connectGithub = async () => {
     try {
       const userId = localStorage.getItem('user_id');
       if (!userId) {
-        throw new Error('User ID not found');
+        throw new Error('User ID not found. Please connect Twitter first.');
       }
 
-      // Call backend to connect GitHub
+      // Call backend to start GitHub OAuth flow
       const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/connect/github`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId,
-          username
-        }),
+        body: JSON.stringify({ userId }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to connect GitHub account');
+        throw new Error(errorData.message || 'Failed to start GitHub authentication');
       }
 
       const data = await response.json();
 
-      if (data.status === 'SUCCESS') {
-        // Update local state and storage
-        localStorage.setItem('github_connected', 'true');
-        localStorage.setItem('github_username', username);
-
-        if (user) {
-          setUser({
-            ...user,
-            githubConnected: true
-          });
-        }
-
-        updateUser({
-          ...user,
-          githubConnected: true
-        });
-
-        // get dashboard data nad update username in dashboard data
-        const dashboardData = localStorage.getItem('dashboard_data');
-        if (dashboardData) {
-          const parsedData = JSON.parse(dashboardData);
-          parsedData.user.github_username = username;
-          localStorage.setItem('dashboard_data', JSON.stringify(parsedData));
-        }
-
-        return { success: true };
-      } else {
-        throw new Error(data.message || 'Failed to connect GitHub account');
+      // Store state for CSRF verification in callback
+      if (data.data?.state) {
+        localStorage.setItem('github_oauth_state', data.data.state);
       }
+
+      // Redirect to GitHub auth URL
+      window.location.href = data.data.url;
     } catch (error) {
-      console.error('Error connecting GitHub:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'An unknown error occurred'
-      };
+      console.error('Error starting GitHub authentication:', error);
     }
   };
 
@@ -236,19 +207,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('leetcode_connected', 'true');
         localStorage.setItem('leetcode_username', username);
 
-        if (user) {
-          setUser({
-            ...user,
-            leetCodeConnected: true
-          });
-        }
+        updateUser({ leetCodeConnected: true });
 
-        updateUser({
-          ...user,
-          leetCodeConnected: true
-        });
-
-        // get dashboard data and update username in dashboard data
+        // Update dashboard data cache
         const dashboardData = localStorage.getItem('dashboard_data');
         if (dashboardData) {
           const parsedData = JSON.parse(dashboardData);

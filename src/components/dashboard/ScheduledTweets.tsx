@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
-import { CalendarClock, Trash2, Edit3, Plus, CheckCircle, Clock, RefreshCw, Settings } from 'lucide-react';
+import { CalendarClock, Trash2, Edit3, Plus, CheckCircle, Clock, RefreshCw, Settings, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import TweetSettingsModal from './TweetSettingsModal';
+import TweetSettingsModal, { type TweetTone } from './TweetSettingsModal';
 import { toast } from 'react-hot-toast';
 
 interface Tweet {
@@ -13,7 +13,7 @@ interface Tweet {
   bot_id?: string;
   content: string;
   schedule_time: string;
-  status: 'SENT' | 'scheduled' | 'FAILED';
+  status: 'SENT' | 'scheduled' | 'FAILED' | 'SKIPPED';
   leetcode_contribution: number;
   github_contribution: number;
   created_at: string;
@@ -35,7 +35,9 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tweetSettings, setTweetSettings] = useState({
     time: localStorage.getItem('dashboard_data') ? JSON.parse(localStorage.getItem('dashboard_data') || '{}').time : '00:00',
-    timezone: 'Asia/Kolkata'
+    timezone: 'Asia/Kolkata',
+    tone: (localStorage.getItem('tweet_tone') as TweetTone) || 'casual' as TweetTone,
+    customHashtags: JSON.parse(localStorage.getItem('tweet_hashtags') || '[]') as string[],
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +50,7 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
     fetchTweets();
   }, [initialTweets, userId]);
 
-  const handleSettingsSave = async (settings: { time: string; timezone: string }) => {
+  const handleSettingsSave = async (settings: { time: string; timezone: string; tone: TweetTone; customHashtags: string[] }) => {
     setTweetSettings(settings);
     const botId = localStorage.getItem('dashboard_data') ? JSON.parse(localStorage.getItem('dashboard_data') || '{}').botId : null;
     if (!botId) {
@@ -60,17 +62,22 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
       const response = await fetch(`${import.meta.env.VITE_REACT_SERVER_URL}/tweet/update-schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ botId, time: settings.time }),
+        body: JSON.stringify({
+          botId,
+          time: settings.time,
+          tone: settings.tone,
+          customHashtags: settings.customHashtags,
+        }),
       });
       const data = await response.json();
       if (response.ok && data.status === 'SUCCESS') {
-        toast.success('Schedule updated successfully!');
+        toast.success('Settings updated successfully!');
         setIsSettingsOpen(false);
       } else {
-        setError(data.message || 'Failed to update schedule');
+        setError(data.message || 'Failed to update settings');
       }
     } catch (err) {
-      setError('Failed to update schedule. Please try again.');
+      setError('Failed to update settings. Please try again.');
     }
   };
 
@@ -104,6 +111,13 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
           text: 'Failed',
           color: 'text-[#E0245E]',
           badgeClass: 'border-[#E0245E]/20 text-[#E0245E] bg-[#E0245E]/5',
+        };
+      case 'SKIPPED':
+        return {
+          icon: <SkipForward className="w-3.5 h-3.5 text-white/40" />,
+          text: 'Skipped',
+          color: 'text-white/40',
+          badgeClass: 'border-white/[0.08] text-white/40 bg-white/[0.03]',
         };
       default:
         return {
@@ -324,6 +338,7 @@ const ScheduledTweets: React.FC<ScheduledTweetsProps> = ({
         onClose={() => setIsSettingsOpen(false)}
         onSave={handleSettingsSave}
         currentSettings={tweetSettings}
+        userId={userId}
       />
     </>
   );

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Twitter, Github, Book, CheckCircle, X } from 'lucide-react';
+import { Twitter, Github, Book, CheckCircle, X, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import Toast from '../common/Toast';
+import { toast } from 'react-hot-toast';
 
 interface IntegrationCardsProps {
   fetchDashboardData: () => void;
@@ -18,30 +18,6 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
   const [leetCodeUsername, setLeetCodeUsername] = useState('');
   const [showLeetCodeInput, setShowLeetCodeInput] = useState(false);
   const [isConnectingLeetCode, setIsConnectingLeetCode] = useState(false);
-  const [githubUsername, setGithubUsername] = useState('');
-  const [showGithubInput, setShowGithubInput] = useState(false);
-  const [isConnectingGithub, setIsConnectingGithub] = useState(false);
-
-  const handleGithubConnect = async () => {
-    if (!showGithubInput) {
-      setShowGithubInput(true);
-      return;
-    }
-    if (!githubUsername || disable) return;
-
-    setIsConnectingGithub(true);
-    const response: any = connectGithub(githubUsername);
-    if (response.success) {
-      setIsConnectingGithub(false);
-      setShowGithubInput(false);
-      return <Toast message='Successfully connected to GitHub' type="success" onClose={() => { }} />;
-    } else {
-      setIsConnectingGithub(false);
-      setShowGithubInput(true);
-      fetchDashboardData();
-      return <Toast message='Error connecting to GitHub' type="error" onClose={() => { }} />;
-    }
-  };
 
   const handleLeetCodeConnect = async () => {
     if (!showLeetCodeInput) {
@@ -51,16 +27,19 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
     if (!leetCodeUsername) return;
 
     setIsConnectingLeetCode(true);
-    const response: any = connectLeetCode(leetCodeUsername);
-    if (response.success) {
+    try {
+      const response = await connectLeetCode(leetCodeUsername);
+      if (response.success) {
+        toast.success('Successfully connected to LeetCode');
+        setShowLeetCodeInput(false);
+        fetchDashboardData();
+      } else {
+        toast.error(response.error || 'Error connecting to LeetCode');
+      }
+    } catch {
+      toast.error('Error connecting to LeetCode');
+    } finally {
       setIsConnectingLeetCode(false);
-      setShowLeetCodeInput(false);
-      return <Toast message='Successfully connected to LeetCode' type="success" onClose={() => { }} />;
-    } else {
-      setIsConnectingLeetCode(false);
-      setShowLeetCodeInput(true);
-      fetchDashboardData();
-      return <Toast message='Error connecting to LeetCode' type="error" onClose={() => { }} />;
     }
   };
 
@@ -92,7 +71,7 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
       color: '#FFAD1F',
       connected: user?.leetCodeConnected,
       description: user?.leetCodeConnected
-        ? 'Your account is connected'
+        ? 'Your account is connected and verified'
         : 'Link your LeetCode to share your streaks',
     },
   ];
@@ -133,8 +112,12 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
               <div className="w-full mt-auto">
                 {integration.connected ? (
                   <Badge className="w-full justify-center py-2 bg-[#17BF63]/10 text-[#17BF63] border-[#17BF63]/20 hover:bg-[#17BF63]/15 rounded-xl gap-1.5">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Connected
+                    {integration.id === 'leetcode' ? (
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                    ) : (
+                      <CheckCircle className="w-3.5 h-3.5" />
+                    )}
+                    {integration.id === 'leetcode' ? 'Verified' : 'Connected'}
                   </Badge>
                 ) : integration.id === 'twitter' ? (
                   <Button
@@ -146,34 +129,15 @@ const IntegrationCards: React.FC<IntegrationCardsProps> = ({ fetchDashboardData,
                     Connect
                   </Button>
                 ) : integration.id === 'github' ? (
-                  showGithubInput ? (
-                    <div className="space-y-2 w-full">
-                      <Input
-                        placeholder="GitHub username"
-                        value={githubUsername}
-                        onChange={(e) => setGithubUsername(e.target.value)}
-                        className="h-9 bg-white/[0.04] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl text-sm"
-                      />
-                      <Button
-                        onClick={handleGithubConnect}
-                        disabled={isConnectingGithub || !githubUsername}
-                        className="w-full rounded-xl bg-[#6E5494] hover:bg-[#6E5494]/90 text-white font-medium text-sm h-9"
-                        size="sm"
-                      >
-                        {isConnectingGithub ? 'Connecting...' : 'Connect'}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={handleGithubConnect}
-                      disabled={!user?.twitterConnected}
-                      className="w-full rounded-xl bg-[#6E5494] hover:bg-[#6E5494]/90 text-white font-medium text-sm h-9 disabled:opacity-30"
-                      size="sm"
-                    >
-                      <Github className="w-4 h-4 mr-2" />
-                      Connect
-                    </Button>
-                  )
+                  <Button
+                    onClick={connectGithub}
+                    disabled={!user?.twitterConnected}
+                    className="w-full rounded-xl bg-[#6E5494] hover:bg-[#6E5494]/90 text-white font-medium text-sm h-9 disabled:opacity-30"
+                    size="sm"
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    Connect with GitHub
+                  </Button>
                 ) : integration.id === 'leetcode' ? (
                   showLeetCodeInput ? (
                     <div className="space-y-2 w-full">

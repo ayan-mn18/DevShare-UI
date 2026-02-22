@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitCommit, CheckCircle, Code, Award, Users, ExternalLink } from 'lucide-react';
+import { GitCommit, CheckCircle, Code, Award, Users, ExternalLink, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -130,15 +130,21 @@ const ContributionMetrics: React.FC<ContributionMetricsProps> = ({
               <CardDescription className="text-white/25 text-xs mt-0.5">Your coding challenge stats</CardDescription>
             </div>
             {leetcodeUsername && (
-              <a
-                href={`https://leetcode.com/u/${leetcodeUsername}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-[#17BF63] hover:underline text-xs font-medium gap-1 group"
-              >
-                @{leetcodeUsername}
-                <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </a>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-[#17BF63]/20 text-[#17BF63] bg-[#17BF63]/5 rounded-full text-[10px] px-2 py-0.5 gap-1">
+                  <ShieldCheck className="w-3 h-3" />
+                  Verified
+                </Badge>
+                <a
+                  href={`https://leetcode.com/u/${leetcodeUsername}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-[#17BF63] hover:underline text-xs font-medium gap-1 group"
+                >
+                  @{leetcodeUsername}
+                  <ExternalLink className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+              </div>
             )}
           </div>
         </CardHeader>
