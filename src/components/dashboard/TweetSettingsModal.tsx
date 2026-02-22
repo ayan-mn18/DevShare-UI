@@ -207,11 +207,10 @@ const TweetSettingsModal: React.FC<TweetSettingsModalProps> = ({
                 <button
                   key={tone.value}
                   onClick={() => setSelectedTone(tone.value)}
-                  className={`p-3 rounded-xl border text-left transition-all ${
-                    selectedTone === tone.value
+                  className={`p-3 rounded-xl border text-left transition-all ${selectedTone === tone.value
                       ? 'border-[#1DA1F2]/40 bg-[#1DA1F2]/10'
                       : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-base">{tone.emoji}</span>

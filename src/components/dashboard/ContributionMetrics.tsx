@@ -177,13 +177,12 @@ const ContributionMetrics: React.FC<ContributionMetricsProps> = ({
                     </div>
                     <Badge
                       variant="outline"
-                      className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                        problem.difficulty === 'Easy'
+                      className={`text-[10px] px-2 py-0.5 rounded-full border ${problem.difficulty === 'Easy'
                           ? 'border-[#17BF63]/20 text-[#17BF63] bg-[#17BF63]/5'
                           : problem.difficulty === 'Medium'
                             ? 'border-[#FFAD1F]/20 text-[#FFAD1F] bg-[#FFAD1F]/5'
                             : 'border-[#E0245E]/20 text-[#E0245E] bg-[#E0245E]/5'
-                      }`}
+                        }`}
                     >
                       {problem.difficulty}
                     </Badge>

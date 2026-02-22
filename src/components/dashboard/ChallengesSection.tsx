@@ -481,11 +481,10 @@ const ChallengesSection: React.FC<ChallengesSectionProps> = ({ userId, onHide })
                         key={challenge.id}
                         disabled={enrolled}
                         onClick={() => handleChallengeClick(challenge)}
-                        className={`w-full text-left rounded-xl border p-4 transition-all duration-200 group ${
-                          enrolled
+                        className={`w-full text-left rounded-xl border p-4 transition-all duration-200 group ${enrolled
                             ? 'border-[#1DA1F2]/30 bg-[#0D1117]/40 opacity-50 cursor-not-allowed'
                             : 'border-[#2C3640] bg-[#0D1117]/40 hover:border-[#1DA1F2]/50 hover:bg-[#0D1117]/80 cursor-pointer'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 space-y-2">

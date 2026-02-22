@@ -108,25 +108,25 @@ function App() {
       <AuthProvider>
         <AppContent />
         <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: '#192734',
-            color: '#FFFFFF',
-            border: '1px solid #2C3640',
-            borderRadius: '12px',
-            fontSize: '14px',
-            fontFamily: 'Satoshi, sans-serif',
-          },
-          success: {
-            iconTheme: { primary: '#17BF63', secondary: '#192734' },
-          },
-          error: {
-            iconTheme: { primary: '#E0245E', secondary: '#192734' },
-          },
-        }}
-      />
-    </AuthProvider>
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: '#192734',
+              color: '#FFFFFF',
+              border: '1px solid #2C3640',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontFamily: 'Satoshi, sans-serif',
+            },
+            success: {
+              iconTheme: { primary: '#17BF63', secondary: '#192734' },
+            },
+            error: {
+              iconTheme: { primary: '#E0245E', secondary: '#192734' },
+            },
+          }}
+        />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
